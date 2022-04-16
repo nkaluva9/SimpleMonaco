@@ -23,10 +23,10 @@ namespace SimpleMonaco
 
         private CommandLineArgument() : this(string.Empty, string.Empty) { }
 
-        public CommandLineArgument(string language, string filePath)
+        public CommandLineArgument(string filePath, string language)
         {
-            Language = language;
             FilePath = filePath;
+            Language = language;
         }
 
         public static CommandLineArgument FromArgument(string[] args)
