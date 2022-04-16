@@ -22,6 +22,7 @@ SimpleMonaco.exe C:\Users\Desktop\Sample.js javascript
 
 # Note
 - VisualStudio ビルドイベント
+
 exe出力先にhtmlファルダを配置するためにビルドイベント追加
 ```
 xcopy "$(ProjectDir)\html" "$(OutDir)\html" /i /s /y
