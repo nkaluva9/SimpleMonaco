@@ -17,7 +17,13 @@ namespace SimpleMonaco
         {
             {".js","javascript" },
             {".ts","typescript" },
+            {".cpp","cpp" },
+            {".cs","csharp" },
             {".html","html" },
+            {".xml","xml" },
+            {".yaml","yaml" },
+            {".bat","bat" },
+            {".sql","sql" },
         };
 
         private string _FilePath = string.Empty;
