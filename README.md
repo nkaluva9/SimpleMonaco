@@ -4,7 +4,7 @@ WPFで動作するシンプルなMonacoEditorです。
 Ctrl＋Sで名前を付けて保存or上書き保存を行うことができます。
 
 # DEMO
-![image](https://user-images.githubusercontent.com/54029057/163654918-57e2ea5d-13b9-47aa-bce0-32c6953c31b8.png)
+![image](https://user-images.githubusercontent.com/54029057/163663583-d5bce2d0-8b5d-4bde-90f0-6e346363c618.png)
 
 # Usage
 - コマンドライン引数なし
