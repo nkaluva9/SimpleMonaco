@@ -21,6 +21,14 @@ SimpleMonaco.exe C:\Users\Desktop\Sample.js javascript
 ```
 
 # Note
+- VisualStudio ビルドイベント
+exe出力先にhtmlファルダを配置するためにビルドイベント追加
+```
+xcopy "$(ProjectDir)\html" "$(OutDir)\html" /i /s /y
+```
+![image](https://user-images.githubusercontent.com/54029057/163672256-dbd99c23-9432-40ee-908c-5259547278db.png)
+
+# Installation
 - Monaco Editor
 
 https://microsoft.github.io/monaco-editor/
