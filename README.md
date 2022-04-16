@@ -19,3 +19,17 @@ SimpleMonaco.exe javascript
 ```
 SimpleMonaco.exe javascript C:\Users\Desktop\Sample.js
 ```
+
+# Note
+- Monaco Editor
+
+https://microsoft.github.io/monaco-editor/
+
+- Monaco Editorとインストールと更新
+```
+npm install monaco-editor@{VERSION}
+```
+以下のディレクトリにインストールした「monaco-editor」を配置する。
+```
+SimpleMonaco/SimpleMonaco/html/node_modules/
+```
