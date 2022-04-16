@@ -19,6 +19,7 @@ namespace SimpleMonaco
         {
             {".js","javascript" },
             {".ts","typescript" },
+            {".xaml","xml" },
             {".cs","csharp" },
             {".md","markdown" },
         };
