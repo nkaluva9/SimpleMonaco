@@ -11,13 +11,13 @@ Ctrl＋Sで名前を付けて保存or上書き保存を行うことができま�
 ```
 SimpleMonaco.exe
 ```
-- コマンドライン引数（言語指定）
+- コマンドライン引数（ファイル指定）
 ```
-SimpleMonaco.exe javascript
+SimpleMonaco.exe C:\Users\Desktop\Sample.js
 ```
-- コマンドライン引数（言語指定＋ファイル指定）
+- コマンドライン引数（ファイル指定＋言語指定）
 ```
-SimpleMonaco.exe javascript C:\Users\Desktop\Sample.js
+SimpleMonaco.exe C:\Users\Desktop\Sample.js javascript 
 ```
 
 # Note
