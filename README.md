@@ -31,5 +31,5 @@ npm install monaco-editor@{VERSION}
 ```
 以下のディレクトリにインストールした「monaco-editor」を配置する。
 ```
-SimpleMonaco/SimpleMonaco/html/node_modules/
+/SimpleMonaco/html/node_modules/
 ```
