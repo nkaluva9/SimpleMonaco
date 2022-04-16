@@ -1,9 +1,11 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace SimpleMonaco
@@ -88,6 +90,14 @@ namespace SimpleMonaco
                     Title = "*" + Title;
                 }
             };
+            _Model.Loaded += async (model) =>
+              {
+                  MonacoWebView.Visibility = Visibility.Visible;
+                  await Task.Delay(200);
+                  MonacoWebView.UpdateWindowPos();
+              };
+
+           SetWindowSetting();
         }
 
         private void Save(MonacoModel model, string saveFilePath)
@@ -119,6 +129,47 @@ namespace SimpleMonaco
             }
         }
 
+        private void SetWindowSetting()
+        {
+            var settings = WindowSetting.Default;
+            if (settings.WindowLeft >= 0 &&
+                (settings.WindowLeft + settings.WindowWidth) < SystemParameters.VirtualScreenWidth)
+            { 
+                Left = settings.WindowLeft; 
+            }
+            if (settings.WindowTop >= 0 &&
+                (settings.WindowTop + settings.WindowHeight) < SystemParameters.VirtualScreenHeight)
+            { 
+                Top = settings.WindowTop; 
+            }
+            if (settings.WindowWidth > 0 &&
+                settings.WindowWidth <= SystemParameters.WorkArea.Width)
+            { 
+                Width = settings.WindowWidth; 
+            }
+            if (settings.WindowHeight > 0 &&
+                settings.WindowHeight <= SystemParameters.WorkArea.Height)
+            {
+                Height = settings.WindowHeight; 
+            }
+            if (settings.WindowMaximized)
+            {
+                WindowState = WindowState.Maximized;
+            }
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            var settings = WindowSetting.Default;
+            settings.WindowMaximized = WindowState == WindowState.Maximized;
+            settings.WindowLeft = Left;
+            settings.WindowTop = Top;
+            settings.WindowWidth = Width;
+            settings.WindowHeight = Height;
+            settings.Save();
+            base.OnClosing(e);
+        }
+
         private void MonacoWebView_NavigationStarting(object sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationStartingEventArgs e)
         {
             if (MonacoWebView.CoreWebView2 != null)
@@ -134,6 +185,8 @@ namespace SimpleMonaco
         public event Action<MonacoModel>? TextChanged;
 
         public event Action<MonacoModel>? RequestSave;
+
+        public event Action<MonacoModel>? Loaded;
 
         private string _Text = string.Empty;
         public string Text
@@ -154,6 +207,11 @@ namespace SimpleMonaco
         public void OnRequestSave()
         {
             RequestSave?.Invoke(this);
+        }
+
+        public void OnLoaded()
+        {
+            Loaded?.Invoke(this);
         }
     }
 }

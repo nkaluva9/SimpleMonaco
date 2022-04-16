@@ -21,15 +21,17 @@
     <div id="container"></div>
     <script src="node_modules/monaco-editor/min/vs/loader.js"></script>
     <script>
+        let editer;
+        let model;
         require.config({ paths: { 'vs': 'node_modules/monaco-editor/min/vs' } });
         require(['vs/editor/editor.main'], async function () {
-            const editor = monaco.editor.create(document.getElementById('container'), {
+            editor = monaco.editor.create(document.getElementById('container'), {
                 theme: "vs-dark",
                 fontFamily:'Cascadia Code',
                 language: await chrome.webview.hostObjects.model.Language,
                 value: await chrome.webview.hostObjects.model.Text,
             });
-            const model = editor.getModel();
+            model = editor.getModel();
             model.onDidChangeContent((event) => {
                 chrome.webview.hostObjects.model.Text = model.getValue();
             });
@@ -37,9 +39,15 @@
                 chrome.webview.hostObjects.model.OnRequestSave();
             })
             window.addEventListener("resize", () => {
-                editor.layout();
+                layout();
             });
+
+            chrome.webview.hostObjects.model.OnLoaded();
         });
+
+        function layout() {
+            editor.layout();
+        }
     </script>
 </body>
 </html>
