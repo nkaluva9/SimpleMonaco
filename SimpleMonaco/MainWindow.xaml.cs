@@ -17,13 +17,8 @@ namespace SimpleMonaco
         {
             {".js","javascript" },
             {".ts","typescript" },
-            {".cpp","cpp" },
             {".cs","csharp" },
-            {".html","html" },
-            {".xml","xml" },
-            {".yaml","yaml" },
-            {".bat","bat" },
-            {".sql","sql" },
+            {".md","markdown" },
         };
 
         private string _FilePath = string.Empty;
@@ -68,9 +63,17 @@ namespace SimpleMonaco
             if (!string.IsNullOrEmpty(FilePath) && string.IsNullOrEmpty(App.Argument.Language))
             {
                 var ext = Path.GetExtension(FilePath);
-                if (!string.IsNullOrEmpty(ext) && _LanguageMap.ContainsKey(Path.GetExtension(FilePath)))
+                if (!string.IsNullOrEmpty(ext))
                 {
-                    _Model.Language = _LanguageMap[ext];
+
+                    if (_LanguageMap.ContainsKey(Path.GetExtension(FilePath)))
+                    {
+                        _Model.Language = _LanguageMap[ext];
+                    }
+                    else
+                    {
+                        _Model.Language = ext.Substring(1);
+                    }
                 }
             }
             else
