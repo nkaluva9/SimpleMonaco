@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -12,6 +13,13 @@ namespace SimpleMonaco
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly IDictionary<string, string> _LanguageMap = new Dictionary<string, string>()
+        {
+            {".js","javascript" },
+            {".ts","typescript" },
+            {".html","html" },
+        };
+
         private string _FilePath = string.Empty;
         public string FilePath
         {
@@ -51,7 +59,18 @@ namespace SimpleMonaco
                     MessageBox.Show(ex.Message);
                 }
             }
-            _Model.Language = App.Argument.Language;
+            if (!string.IsNullOrEmpty(FilePath) && string.IsNullOrEmpty(App.Argument.Language))
+            {
+                var ext = Path.GetExtension(FilePath);
+                if (!string.IsNullOrEmpty(ext) && _LanguageMap.ContainsKey(Path.GetExtension(FilePath)))
+                {
+                    _Model.Language = _LanguageMap[ext];
+                }
+            }
+            else
+            {
+                _Model.Language = App.Argument.Language;
+            }
             _Model.RequestSave += (model) => Save(model, FilePath);
             _Model.TextChanged += (model) =>
             {
@@ -109,11 +128,11 @@ namespace SimpleMonaco
 
         private string _Text = string.Empty;
         public string Text
-        { 
+        {
             get => _Text;
             set
             {
-                if(_Text != value)
+                if (_Text != value)
                 {
                     _Text = value;
                     TextChanged?.Invoke(this);
@@ -121,7 +140,7 @@ namespace SimpleMonaco
             }
         }
 
-        public string Language { get; set; } = "";
+        public string Language { get; set; } = string.Empty;
 
         public void OnRequestSave()
         {
