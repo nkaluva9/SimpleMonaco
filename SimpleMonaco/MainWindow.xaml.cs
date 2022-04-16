@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 
@@ -34,7 +35,7 @@ namespace SimpleMonaco
         public MainWindow()
         {
             InitializeComponent();
-            var htmlUri = Directory.GetCurrentDirectory() + @"\html\index.html";
+            var htmlUri = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\html\index.html";
             MonacoWebView.Source = new Uri(htmlUri);
 
             var path = App.Argument.FilePath;
