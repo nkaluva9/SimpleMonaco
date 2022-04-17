@@ -10,7 +10,7 @@ namespace SimpleMonaco
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IRecipient<ShowMessageBoxMessage>, IRecipient<ShowCommonDialogMessage>
+    public partial class MainWindow : Window, IRecipient<ShowMessageBoxMessage>, IRecipient<ShowFileDialogMessage>
     {
         public static readonly DependencyProperty ViewModelProperty
                                     = DependencyProperty.Register(
@@ -91,11 +91,12 @@ namespace SimpleMonaco
             message.Result = MessageBox.Show(message.Message, message.Title, message.Buttons, message.Icon);
         }
 
-        public void Receive(ShowCommonDialogMessage message)
+        public void Receive(ShowFileDialogMessage message)
         {
-            var dialog = (CommonDialog)Activator.CreateInstance(message.DialogType);
+            var dialog = (FileDialog)Activator.CreateInstance(message.DialogType);
+            dialog.Filter = message.Filter;
             message.Result = dialog.ShowDialog() == true;
-            message.Dialog = dialog;
+            message.FileNamse = dialog.FileNames;
         }
     }
 
@@ -120,7 +121,7 @@ namespace SimpleMonaco
         }
     }
 
-    public class ShowCommonDialogMessage
+    public class ShowFileDialogMessage
     {
         public Type DialogType { get; }
 
@@ -128,9 +129,9 @@ namespace SimpleMonaco
 
         public bool Result { get; set; }
 
-        public CommonDialog Dialog { get; set; }
+        public string[] FileNamse { get; set; }
 
-        public ShowCommonDialogMessage(Type dialogType, string fillter)
+        public ShowFileDialogMessage(Type dialogType, string fillter)
         {
             DialogType = dialogType;
             Filter = fillter;

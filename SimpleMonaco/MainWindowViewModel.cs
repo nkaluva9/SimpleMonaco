@@ -126,7 +126,7 @@ namespace SimpleMonaco
         {
             if (string.IsNullOrEmpty(saveFilePath))
             {
-                var result = WeakReferenceMessenger.Default.Send(new ShowCommonDialogMessage(
+                var result = WeakReferenceMessenger.Default.Send(new ShowFileDialogMessage(
                     typeof(SaveFileDialog),
                     "すべて|*|テキスト|*.txt"));
 
@@ -134,7 +134,7 @@ namespace SimpleMonaco
                 {
                     return;
                 }
-                saveFilePath = ((SaveFileDialog)result.Dialog).FileName;
+                saveFilePath = result.FileNamse[0];
             }
 
             try
