@@ -27,9 +27,9 @@ namespace SimpleMonaco
 
         public MainWindow()
         {
-            SetWindowSetting();
-
             InitializeComponent();
+
+            SetWindowSetting();
 
             WeakReferenceMessenger.Default.RegisterAll(this);
 
