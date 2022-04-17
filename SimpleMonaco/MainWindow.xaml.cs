@@ -1,9 +1,8 @@
-﻿using Microsoft.Win32;
+﻿using Microsoft.Toolkit.Mvvm.Messaging;
+using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
+using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace SimpleMonaco
@@ -11,149 +10,131 @@ namespace SimpleMonaco
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IRecipient<ShowMessageBoxMessage>, IRecipient<ShowFileDialogMessage>
     {
-        private readonly IDictionary<string, string> _LanguageMap = new Dictionary<string, string>()
-        {
-            {".js","javascript" },
-            {".ts","typescript" },
-            {".cs","csharp" },
-            {".md","markdown" },
-        };
+        public static readonly DependencyProperty ViewModelProperty
+                                    = DependencyProperty.Register(
+                                                        nameof(ViewModel),
+                                                        typeof(MainWindowViewModel),
+                                                        typeof(MainWindow),
+                                                        new PropertyMetadata(null));
 
-        private string _FilePath = string.Empty;
-        public string FilePath
+        public MainWindowViewModel ViewModel
         {
-            get => _FilePath;
-            set
-            {
-                _FilePath = value;
-                if (string.IsNullOrEmpty(_FilePath))
-                {
-                    Title = $"SimpleMonaco";
-                }
-                else
-                {
-                    Title = $"SimpleMonaco ({_FilePath})";
-                }
-            }
+            get => (MainWindowViewModel)GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
         }
-
-        private readonly MonacoModel _Model = new MonacoModel();
 
         public MainWindow()
         {
             InitializeComponent();
-            var htmlUri = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\html\index.html";
-            MonacoWebView.Source = new Uri(htmlUri);
 
-            var path = App.Argument.FilePath;
-            if (!string.IsNullOrEmpty(path))
-            {
-                try
-                {
-                    _Model.Text = File.ReadAllText(path);
-                    FilePath = path;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-            if (!string.IsNullOrEmpty(FilePath) && string.IsNullOrEmpty(App.Argument.Language))
-            {
-                var ext = Path.GetExtension(FilePath);
-                if (!string.IsNullOrEmpty(ext))
-                {
+            SetWindowSetting();
 
-                    if (_LanguageMap.ContainsKey(Path.GetExtension(FilePath)))
-                    {
-                        _Model.Language = _LanguageMap[ext];
-                    }
-                    else
-                    {
-                        _Model.Language = ext.Substring(1);
-                    }
-                }
-            }
-            else
+            WeakReferenceMessenger.Default.RegisterAll(this);
+
+            ViewModel = new MainWindowViewModel();
+            ViewModel.Model.Loaded += async (model) =>
             {
-                _Model.Language = App.Argument.Language;
-            }
-            _Model.RequestSave += (model) => Save(model, FilePath);
-            _Model.TextChanged += (model) =>
-            {
-                if (!Title.StartsWith("*"))
-                {
-                    Title = "*" + Title;
-                }
+                MonacoWebView.Visibility = Visibility.Visible;
+                await Task.Delay(200);
+                MonacoWebView.UpdateWindowPos();
             };
         }
 
-        private void Save(MonacoModel model, string saveFilePath)
+        private void SetWindowSetting()
         {
-            if (string.IsNullOrEmpty(saveFilePath))
+            var settings = WindowSetting.Default;
+            if (settings.WindowLeft > SystemParameters.VirtualScreenLeft
+                 && settings.WindowLeft + settings.WindowWidth < SystemParameters.VirtualScreenWidth)
             {
-                var sfv = new SaveFileDialog();
-                sfv.Filter = "すべて|*|テキスト|*.txt";
-                if (sfv.ShowDialog() != true)
-                {
-                    return;
-                }
-                saveFilePath = sfv.FileName;
+                Left = settings.WindowLeft;
             }
+            if (settings.WindowTop > SystemParameters.VirtualScreenTop
+                 && settings.WindowTop + settings.WindowHeight < SystemParameters.VirtualScreenHeight)
+            {
+                Top = settings.WindowTop;
+            }
+            if (settings.WindowWidth < SystemParameters.WorkArea.Width)
+            {
+                Width = settings.WindowWidth;
+            }
+            if (settings.WindowHeight < SystemParameters.WorkArea.Height)
+            {
+                Height = settings.WindowHeight;
+            }
+            WindowState = settings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
+        }
 
-            try
-            {
-                File.WriteAllText(saveFilePath, model.Text);
-                FilePath = saveFilePath;
-            }
-            catch (Exception ex)
-            {
-                if (MessageBox.Show($"保存できません。別名で保存しますか？{Environment.NewLine}（ {ex.Message}）",
-                                    "エラー",
-                                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                {
-                    Save(model, string.Empty);
-                }
-            }
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            var settings = WindowSetting.Default;
+            settings.IsMaximized = WindowState == WindowState.Maximized;
+            settings.WindowLeft = Left;
+            settings.WindowTop = Top;
+            settings.WindowWidth = Width;
+            settings.WindowHeight = Height;
+            settings.Save();
+            base.OnClosing(e);
         }
 
         private void MonacoWebView_NavigationStarting(object sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationStartingEventArgs e)
         {
             if (MonacoWebView.CoreWebView2 != null)
             {
-                MonacoWebView.CoreWebView2.AddHostObjectToScript("model", _Model);
+                MonacoWebView.CoreWebView2.AddHostObjectToScript("model", ViewModel.Model);
             }
+        }
+
+        public void Receive(ShowMessageBoxMessage message)
+        {
+            message.Result = MessageBox.Show(message.Message, message.Title, message.Buttons, message.Icon);
+        }
+
+        public void Receive(ShowFileDialogMessage message)
+        {
+            var dialog = (FileDialog)Activator.CreateInstance(message.DialogType);
+            dialog.Filter = message.Filter;
+            message.Result = dialog.ShowDialog() == true;
+            message.FileNamse = dialog.FileNames;
         }
     }
 
-    [ComVisible(true)]
-    public class MonacoModel
+    public class ShowMessageBoxMessage
     {
-        public event Action<MonacoModel>? TextChanged;
+        public string Title { get; }
 
-        public event Action<MonacoModel>? RequestSave;
+        public string Message { get; }
 
-        private string _Text = string.Empty;
-        public string Text
+        public MessageBoxButton Buttons { get; }
+
+        public MessageBoxImage Icon { get; }
+
+        public MessageBoxResult Result { get; set; }
+
+        public ShowMessageBoxMessage(string title, string message, MessageBoxButton buttons = MessageBoxButton.OK, MessageBoxImage icon = MessageBoxImage.None)
         {
-            get => _Text;
-            set
-            {
-                if (_Text != value)
-                {
-                    _Text = value;
-                    TextChanged?.Invoke(this);
-                }
-            }
+            Title = title;
+            Message = message;
+            Buttons = buttons;
+            Icon = icon;
         }
+    }
 
-        public string Language { get; set; } = string.Empty;
+    public class ShowFileDialogMessage
+    {
+        public Type DialogType { get; }
 
-        public void OnRequestSave()
+        public string Filter { get; }
+
+        public bool Result { get; set; }
+
+        public string[] FileNamse { get; set; }
+
+        public ShowFileDialogMessage(Type dialogType, string fillter)
         {
-            RequestSave?.Invoke(this);
+            DialogType = dialogType;
+            Filter = fillter;
         }
     }
 }

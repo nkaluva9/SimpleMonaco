@@ -6,26 +6,32 @@
     xmlns:local="clr-namespace:SimpleMonaco"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:wpf="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
-    Title="SimpleMonaco"
-    Width="450"
-    Height="650"
+    x:Name="Root"
+    Title="{Binding ViewModel.Title, Mode=OneWay, ElementName=Root}"
+    Width="600"
+    Height="700"
     BorderThickness="2"
     FontFamily="Cascadia Mono"
+    Icon="icon.ico"
+    WindowStartupLocation="Manual"
     mc:Ignorable="d">
 
-    <Grid>
+    <Grid Background="#202020">
 
         <wpf:WebView2
             x:Name="MonacoWebView"
             Margin="-1"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
-            NavigationStarting="MonacoWebView_NavigationStarting" />
+            NavigationStarting="MonacoWebView_NavigationStarting"
+            Source="{Binding ViewModel.HtmlUri, Mode=OneWay, ElementName=Root}"
+            Visibility="Hidden" />
 
         <TextBlock
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             FontSize="48"
+            Foreground="SkyBlue"
             Text="Simple Monaco" />
 
     </Grid>
