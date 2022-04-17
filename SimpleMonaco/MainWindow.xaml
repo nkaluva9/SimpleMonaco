@@ -6,7 +6,8 @@
     xmlns:local="clr-namespace:SimpleMonaco"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:wpf="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
-    Title="SimpleMonaco"
+    x:Name="Root"
+    Title="{Binding ViewModel.Title, Mode=OneWay, ElementName=Root}"
     Width="600"
     Height="700"
     BorderThickness="2"
@@ -23,6 +24,7 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             NavigationStarting="MonacoWebView_NavigationStarting"
+            Source="{Binding ViewModel.HtmlUri, Mode=OneWay, ElementName=Root}"
             Visibility="Hidden" />
 
         <TextBlock

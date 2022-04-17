@@ -25,7 +25,7 @@ namespace SimpleMonaco {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("600")]
         public double WindowWidth {
             get {
                 return ((double)(this["WindowWidth"]));
@@ -37,7 +37,7 @@ namespace SimpleMonaco {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("700")]
         public double WindowHeight {
             get {
                 return ((double)(this["WindowHeight"]));
@@ -49,7 +49,7 @@ namespace SimpleMonaco {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("300")]
         public double WindowLeft {
             get {
                 return ((double)(this["WindowLeft"]));
@@ -61,7 +61,7 @@ namespace SimpleMonaco {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("300")]
         public double WindowTop {
             get {
                 return ((double)(this["WindowTop"]));
@@ -74,12 +74,12 @@ namespace SimpleMonaco {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool WindowMaximized {
+        public bool IsMaximized {
             get {
-                return ((bool)(this["WindowMaximized"]));
+                return ((bool)(this["IsMaximized"]));
             }
             set {
-                this["WindowMaximized"] = value;
+                this["IsMaximized"] = value;
             }
         }
     }

@@ -1,10 +1,7 @@
-﻿using Microsoft.Win32;
+﻿using Microsoft.Toolkit.Mvvm.Messaging;
+using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -13,156 +10,66 @@ namespace SimpleMonaco
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IRecipient<ShowMessageBoxMessage>, IRecipient<ShowCommonDialogMessage>
     {
-        private readonly IDictionary<string, string> _LanguageMap = new Dictionary<string, string>()
-        {
-            {".js","javascript" },
-            {".ts","typescript" },
-            {".xaml","xml" },
-            {".cs","csharp" },
-            {".md","markdown" },
-        };
+        public static readonly DependencyProperty ViewModelProperty
+                                    = DependencyProperty.Register(
+                                                        nameof(ViewModel),
+                                                        typeof(MainWindowViewModel),
+                                                        typeof(MainWindow),
+                                                        new PropertyMetadata(null));
 
-        private string _FilePath = string.Empty;
-        public string FilePath
+        public MainWindowViewModel ViewModel
         {
-            get => _FilePath;
-            set
-            {
-                _FilePath = value;
-                if (string.IsNullOrEmpty(_FilePath))
-                {
-                    Title = $"SimpleMonaco";
-                }
-                else
-                {
-                    Title = $"SimpleMonaco ({_FilePath})";
-                }
-            }
+            get => (MainWindowViewModel)GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
         }
-
-        private readonly MonacoModel _Model = new MonacoModel();
 
         public MainWindow()
         {
+            SetWindowSetting();
+
             InitializeComponent();
-            var htmlUri = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\html\index.html";
-            MonacoWebView.Source = new Uri(htmlUri);
 
-            var path = App.Argument.FilePath;
-            if (!string.IsNullOrEmpty(path))
-            {
-                try
-                {
-                    _Model.Text = File.ReadAllText(path);
-                    FilePath = path;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-            if (!string.IsNullOrEmpty(FilePath) && string.IsNullOrEmpty(App.Argument.Language))
-            {
-                var ext = Path.GetExtension(FilePath);
-                if (!string.IsNullOrEmpty(ext))
-                {
+            WeakReferenceMessenger.Default.RegisterAll(this);
 
-                    if (_LanguageMap.ContainsKey(Path.GetExtension(FilePath)))
-                    {
-                        _Model.Language = _LanguageMap[ext];
-                    }
-                    else
-                    {
-                        _Model.Language = ext.Substring(1);
-                    }
-                }
-            }
-            else
+            ViewModel = new MainWindowViewModel();
+            ViewModel.Model.Loaded += async (model) =>
             {
-                _Model.Language = App.Argument.Language;
-            }
-            _Model.RequestSave += (model) => Save(model, FilePath);
-            _Model.TextChanged += (model) =>
-            {
-                if (!Title.StartsWith("*"))
-                {
-                    Title = "*" + Title;
-                }
+                MonacoWebView.Visibility = Visibility.Visible;
+                await Task.Delay(200);
+                MonacoWebView.UpdateWindowPos();
             };
-            _Model.Loaded += async (model) =>
-              {
-                  MonacoWebView.Visibility = Visibility.Visible;
-                  await Task.Delay(200);
-                  MonacoWebView.UpdateWindowPos();
-              };
-
-           SetWindowSetting();
-        }
-
-        private void Save(MonacoModel model, string saveFilePath)
-        {
-            if (string.IsNullOrEmpty(saveFilePath))
-            {
-                var sfv = new SaveFileDialog();
-                sfv.Filter = "すべて|*|テキスト|*.txt";
-                if (sfv.ShowDialog() != true)
-                {
-                    return;
-                }
-                saveFilePath = sfv.FileName;
-            }
-
-            try
-            {
-                File.WriteAllText(saveFilePath, model.Text);
-                FilePath = saveFilePath;
-            }
-            catch (Exception ex)
-            {
-                if (MessageBox.Show($"保存できません。別名で保存しますか？{Environment.NewLine}（ {ex.Message}）",
-                                    "エラー",
-                                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                {
-                    Save(model, string.Empty);
-                }
-            }
         }
 
         private void SetWindowSetting()
         {
             var settings = WindowSetting.Default;
-            if (settings.WindowLeft >= 0 &&
-                (settings.WindowLeft + settings.WindowWidth) < SystemParameters.VirtualScreenWidth)
-            { 
-                Left = settings.WindowLeft; 
-            }
-            if (settings.WindowTop >= 0 &&
-                (settings.WindowTop + settings.WindowHeight) < SystemParameters.VirtualScreenHeight)
-            { 
-                Top = settings.WindowTop; 
-            }
-            if (settings.WindowWidth > 0 &&
-                settings.WindowWidth <= SystemParameters.WorkArea.Width)
-            { 
-                Width = settings.WindowWidth; 
-            }
-            if (settings.WindowHeight > 0 &&
-                settings.WindowHeight <= SystemParameters.WorkArea.Height)
+            if (settings.WindowLeft > SystemParameters.VirtualScreenLeft
+                 && settings.WindowLeft + settings.WindowWidth < SystemParameters.VirtualScreenWidth)
             {
-                Height = settings.WindowHeight; 
+                Left = settings.WindowLeft;
             }
-            if (settings.WindowMaximized)
+            if (settings.WindowTop > SystemParameters.VirtualScreenTop
+                 && settings.WindowTop + settings.WindowHeight < SystemParameters.VirtualScreenHeight)
             {
-                WindowState = WindowState.Maximized;
+                Top = settings.WindowTop;
             }
+            if (settings.WindowWidth < SystemParameters.WorkArea.Width)
+            {
+                Width = settings.WindowWidth;
+            }
+            if (settings.WindowHeight < SystemParameters.WorkArea.Height)
+            {
+                Height = settings.WindowHeight;
+            }
+            WindowState = settings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
             var settings = WindowSetting.Default;
-            settings.WindowMaximized = WindowState == WindowState.Maximized;
+            settings.IsMaximized = WindowState == WindowState.Maximized;
             settings.WindowLeft = Left;
             settings.WindowTop = Top;
             settings.WindowWidth = Width;
@@ -175,44 +82,58 @@ namespace SimpleMonaco
         {
             if (MonacoWebView.CoreWebView2 != null)
             {
-                MonacoWebView.CoreWebView2.AddHostObjectToScript("model", _Model);
+                MonacoWebView.CoreWebView2.AddHostObjectToScript("model", ViewModel.Model);
             }
+        }
+
+        public void Receive(ShowMessageBoxMessage message)
+        {
+            message.Result = MessageBox.Show(message.Message, message.Title, message.Buttons, message.Icon);
+        }
+
+        public void Receive(ShowCommonDialogMessage message)
+        {
+            var dialog = (CommonDialog)Activator.CreateInstance(message.DialogType);
+            message.Result = dialog.ShowDialog() == true;
+            message.Dialog = dialog;
         }
     }
 
-    [ComVisible(true)]
-    public class MonacoModel
+    public class ShowMessageBoxMessage
     {
-        public event Action<MonacoModel>? TextChanged;
+        public string Title { get; }
 
-        public event Action<MonacoModel>? RequestSave;
+        public string Message { get; }
 
-        public event Action<MonacoModel>? Loaded;
+        public MessageBoxButton Buttons { get; }
 
-        private string _Text = string.Empty;
-        public string Text
+        public MessageBoxImage Icon { get; }
+
+        public MessageBoxResult Result { get; set; }
+
+        public ShowMessageBoxMessage(string title, string message, MessageBoxButton buttons = MessageBoxButton.OK, MessageBoxImage icon = MessageBoxImage.None)
         {
-            get => _Text;
-            set
-            {
-                if (_Text != value)
-                {
-                    _Text = value;
-                    TextChanged?.Invoke(this);
-                }
-            }
+            Title = title;
+            Message = message;
+            Buttons = buttons;
+            Icon = icon;
         }
+    }
 
-        public string Language { get; set; } = string.Empty;
+    public class ShowCommonDialogMessage
+    {
+        public Type DialogType { get; }
 
-        public void OnRequestSave()
+        public string Filter { get; }
+
+        public bool Result { get; set; }
+
+        public CommonDialog Dialog { get; set; }
+
+        public ShowCommonDialogMessage(Type dialogType, string fillter)
         {
-            RequestSave?.Invoke(this);
-        }
-
-        public void OnLoaded()
-        {
-            Loaded?.Invoke(this);
+            DialogType = dialogType;
+            Filter = fillter;
         }
     }
 }
