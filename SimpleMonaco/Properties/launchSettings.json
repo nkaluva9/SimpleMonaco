@@ -1,8 +1,7 @@
 {
   "profiles": {
     "SimpleMonaco": {
-      "commandName": "Project",
-      "commandLineArgs": "\"ss\" javascript"
+      "commandName": "Project"
     }
   }
 }
