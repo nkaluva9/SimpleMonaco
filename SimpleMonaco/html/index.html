@@ -8,9 +8,11 @@
             height: 100%;
             margin: 0;
         }
+
         ::-webkit-scrollbar {
             display: none;
         }
+
         #container {
             height: 100%;
             width: 100%;
@@ -21,32 +23,27 @@
     <div id="container"></div>
     <script src="node_modules/monaco-editor/min/vs/loader.js"></script>
     <script>
-        let editor;
-        let model;
         require.config({ paths: { 'vs': 'node_modules/monaco-editor/min/vs' } });
         require(['vs/editor/editor.main'], async function () {
-            editor = monaco.editor.create(document.getElementById('container'), {
+            const editor = monaco.editor.create(document.getElementById('container'), {
                 theme: "vs-dark",
                 fontFamily:'Cascadia Code',
                 language: await chrome.webview.hostObjects.model.Language,
                 value: await chrome.webview.hostObjects.model.Text,
             });
-            model = editor.getModel();
+            const model = editor.getModel();
             model.onDidChangeContent((event) => {
                 chrome.webview.hostObjects.model.Text = model.getValue();
             });
-            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS , function() {
                 chrome.webview.hostObjects.model.OnRequestSave();
             })
             window.addEventListener("resize", () => {
-                layout();
+                editor.layout();
             });
 
             chrome.webview.hostObjects.model.OnLoaded();
         });
-        function layout() {
-            editor.layout();
-        }
     </script>
 </body>
 </html>
